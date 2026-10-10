@@ -1,0 +1,16 @@
+[package]
+name = "pyrlyn-tools"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Shared development helpers for pyrlyn Rust repositories: cargo cache report, swarfr cleanup, CPU count"
+license = "GPL-3.0-or-later"
+repository = "https://github.com/pyrlyn/tools"
+publish = false
+
+[[bin]]
+name = "ptools"
+path = "src/main.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
