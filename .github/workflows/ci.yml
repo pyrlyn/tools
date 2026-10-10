@@ -25,5 +25,6 @@ jobs:
         {"os": "macos-latest", "target": "aarch64-apple-darwin"},
         {"os": "windows-latest", "target": "x86_64-pc-windows-msvc"}
         ]
+      xcode-version: "" # public repo: macos-latest has Xcode 26.x, the xcode-27 image is not available
       feature-args: ""
       clippy-args: --locked
