@@ -6,6 +6,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -16,7 +20,6 @@ jobs:
     permissions:
       contents: read
       actions: write # cancel-run on failure
-    secrets: inherit
     with:
       mold: true # mold + clang on Linux runners (mise.toml [env])
       rust-version: "1.98.1" # same pin as mise.toml
