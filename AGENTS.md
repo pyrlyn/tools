@@ -9,7 +9,7 @@ build helpers). CI workflows live in pyrlyn/ci. `origin` is `git@github.com:pyrl
 
 | Path | Role |
 | --- | --- |
-| `src/main.rs` | the `ptools` binary: `cache`, `swarfr`, `cpus` |
+| `src/main.rs` | the `ptools` binary: `cache`, `swarfr`, `sweep`, `cpus` |
 | `tests/cli.rs` | runs the binary against fake `cargo-cache` and `swarfr` scripts (Unix only) |
 | `docs/consuming.md` | how a repository pins and calls `ptools` |
 
