@@ -1,2 +1,7 @@
-/target
+__pycache__/
+*.egg-info/
+.venv/
+.mypy_cache/
+.pytest_cache/
+/dist/
 .DS_Store

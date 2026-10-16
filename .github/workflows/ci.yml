@@ -10,25 +10,20 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  CARGO_TERM_COLOR: always
+permissions:
+  contents: read
 
 jobs:
-  # pyrlyn/ci ci-rust.yml: fmt once, then clippy, check and tests per target. No build logic here.
-  rust:
-    uses: pyrlyn/ci/.github/workflows/ci-rust.yml@9748fe1e5a2007d695e4e1a1d9b16492660dd8bc # main 2026-10-11 (mold input)
-    permissions:
-      contents: read
-      actions: write # cancel-run on failure
-    with:
-      mold: true # mold + clang on Linux runners (mise.toml [env])
-      rust-version: "1.98.1" # same pin as mise.toml
-      matrix: >-
-        [
-        {"os": "ubuntu-latest", "target": "x86_64-unknown-linux-gnu"},
-        {"os": "macos-latest", "target": "aarch64-apple-darwin"},
-        {"os": "windows-latest", "target": "x86_64-pc-windows-msvc"}
-        ]
-      xcode-version: "" # public repo: macos-latest has Xcode 26.x, the xcode-27 image is not available
-      feature-args: ""
-      clippy-args: --locked
+  # Strict typing (mypy --strict) and the pytest suite; Python and uv come from mise.toml.
+  python:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
+      - run: mise exec -- just check
