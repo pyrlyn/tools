@@ -138,6 +138,48 @@ fn cpus_prints_a_positive_number() {
     assert!(text(&out.stdout).trim().parse::<usize>().unwrap() >= 1);
 }
 
+#[test]
+fn sweep_defaults_to_one_day_recursive() {
+    let tmp = tempfile_dir("sweep1");
+    let cs = fake(&tmp, "cs", &format!("echo \"$*\" > {}/log", tmp.display()));
+    let out = ptools(&tmp, &["sweep"], &[("PTOOLS_CARGO_SWEEP", &cs)]);
+    assert!(out.status.success());
+    assert_eq!(
+        fs::read_to_string(tmp.join("log")).unwrap(),
+        "--recursive --time 1 .\n"
+    );
+}
+
+#[test]
+fn sweep_passes_days_dry_run_and_dir() {
+    let tmp = tempfile_dir("sweep2");
+    let cs = fake(&tmp, "cs", &format!("echo \"$*\" > {}/log", tmp.display()));
+    let out = ptools(
+        &tmp,
+        &["sweep", "--days", "3", "--dry-run", "work"],
+        &[("PTOOLS_CARGO_SWEEP", &cs)],
+    );
+    assert!(out.status.success());
+    assert_eq!(
+        fs::read_to_string(tmp.join("log")).unwrap(),
+        "--recursive --time 3 --dry-run work\n"
+    );
+}
+
+#[test]
+fn sweep_is_a_noop_without_cargo_sweep_and_rejects_bad_days() {
+    let tmp = tempfile_dir("sweep3");
+    let out = ptools(
+        &tmp,
+        &["sweep"],
+        &[("PTOOLS_CARGO_SWEEP", "/nonexistent/cs")],
+    );
+    assert!(out.status.success());
+    assert!(text(&out.stdout).contains("cargo-sweep not found"));
+    let out = ptools(&tmp, &["sweep", "--days", "x"], &[]);
+    assert_eq!(out.status.code(), Some(2));
+}
+
 fn tempfile_dir(name: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!("ptools-test-{name}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);

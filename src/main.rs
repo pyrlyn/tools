@@ -22,12 +22,18 @@ Usage:
   ptools swarfr [TARGET_DIR]
       Lossless cleanup of the cargo target directory with swarfr (compress + dedupe, never
       deletes). A no-op when swarfr is not installed or the directory does not exist.
+  ptools sweep [--days N] [--dry-run] [DIR]
+      Remove cargo build artifacts not used for N days (default 1, or PTOOLS_SWEEP_DAYS) with
+      cargo-sweep, recursively under DIR (default: .). --dry-run only reports. A no-op when
+      cargo-sweep is not installed.
   ptools cpus
       Print the number of logical CPUs.
 
 Environment:
   PTOOLS_CARGO_CACHE  cargo-cache command (default: cargo-cache)
   PTOOLS_SWARFR       swarfr command (default: swarfr)
+  PTOOLS_CARGO_SWEEP  cargo-sweep command (default: cargo-sweep sweep)
+  PTOOLS_SWEEP_DAYS   default age threshold in days for `sweep` (default: 1)
   CARGO_TARGET_DIR    target directory (default: ./target)
 ";
 
@@ -36,6 +42,7 @@ fn main() -> ExitCode {
     match args.first().map(String::as_str) {
         Some("cache") => cache(&args[1..]),
         Some("swarfr") => swarfr(&args[1..]),
+        Some("sweep") => sweep(&args[1..]),
         Some("cpus") => {
             println!("{}", cpus());
             ExitCode::SUCCESS
@@ -121,6 +128,52 @@ fn swarfr(args: &[String]) -> ExitCode {
         Ok(code) => ExitCode::from(u8::try_from(code).unwrap_or(1)),
         Err(e) => {
             eprintln!("ptools swarfr: {e}");
+            ExitCode::from(1)
+        }
+    }
+}
+
+fn sweep(args: &[String]) -> ExitCode {
+    let mut days = env::var("PTOOLS_SWEEP_DAYS").unwrap_or_else(|_| "1".to_owned());
+    let mut dry_run = false;
+    let mut dir = PathBuf::from(".");
+    let mut it = args.iter();
+    while let Some(arg) = it.next() {
+        match arg.as_str() {
+            "--dry-run" => dry_run = true,
+            "--days" => match it.next() {
+                Some(v) => days.clone_from(v),
+                None => {
+                    eprint!("{USAGE}");
+                    return ExitCode::from(2);
+                }
+            },
+            other if !other.starts_with('-') => dir = PathBuf::from(other),
+            _ => {
+                eprint!("{USAGE}");
+                return ExitCode::from(2);
+            }
+        }
+    }
+    if days.parse::<u32>().is_err() {
+        eprintln!("ptools sweep: --days must be a whole number, got {days:?}");
+        return ExitCode::from(2);
+    }
+    let cmd = command_from_env("PTOOLS_CARGO_SWEEP", "cargo-sweep sweep");
+    if !on_path(&cmd[0]) {
+        println!("cargo-sweep not found; add \"cargo:cargo-sweep\" = \"0.8.0\" to mise.toml");
+        return ExitCode::SUCCESS;
+    }
+    let mut extra: Vec<OsString> = vec!["--recursive".into(), "--time".into(), days.into()];
+    if dry_run {
+        extra.push("--dry-run".into());
+    }
+    extra.push(dir.into_os_string());
+    match run(&cmd, &extra) {
+        Ok(0) => ExitCode::SUCCESS,
+        Ok(code) => ExitCode::from(u8::try_from(code).unwrap_or(1)),
+        Err(e) => {
+            eprintln!("ptools sweep: {e}");
             ExitCode::from(1)
         }
     }

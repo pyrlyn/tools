@@ -10,6 +10,7 @@ repositories used to carry as copy-pasted justfile recipes and scripts. Shared C
 | --- | --- | --- |
 | `ptools cache [--autoclean \| --dry-run]` | cargo-cache report, cleanup of extracted checkouts, and the target directory size | the `cache`, `cache-autoclean` and `cache-dry-run` recipes of cox, ketch and rtok |
 | `ptools swarfr [DIR]` | lossless target cleanup with swarfr; a no-op without swarfr or a target dir | the `swarfr` recipe of cox, ketch and rtok |
+| `ptools sweep [--days N] [--dry-run] [DIR]` | cargo-sweep: removes build artifacts unused for N days (default 1); a no-op without cargo-sweep | new; the apps get a `sweep` mise task |
 | `ptools cpus` | logical CPU count | rtok's `cpus` shell snippet |
 
 Swift: nothing shared yet. The Swift scripts in the repositories (injecta-swift benchmarks,

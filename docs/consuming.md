@@ -32,11 +32,19 @@ cache-autoclean:
 # Lossless cleanup of the target directory; a no-op without swarfr
 swarfr:
     mise exec -- ptools swarfr
+
+# Remove build artifacts unused for 1 day (needs "cargo:cargo-sweep" = "0.8.0" in mise.toml)
+sweep:
+    mise exec -- ptools sweep
+sweep-dry:
+    mise exec -- ptools sweep --dry-run
 ```
+
+`ptools sweep --days N` changes the threshold; `PTOOLS_SWEEP_DAYS` sets the default.
 
 ## Environment
 
-`PTOOLS_CARGO_CACHE` and `PTOOLS_SWARFR` override the commands that are run (they may contain
+`PTOOLS_CARGO_CACHE` and `PTOOLS_SWARFR` (and `PTOOLS_CARGO_SWEEP`) override the commands that are run (they may contain
 arguments, split on whitespace). `CARGO_TARGET_DIR` moves the target directory.
 
 ## Releasing this repository
