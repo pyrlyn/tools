@@ -3,7 +3,7 @@
 version: 1
 
 codeql:
-  languages: [actions, python, rust]
+  languages: [actions, python]
 
 # Snyk stays off (pyrlyn/ci default).
 snyk:

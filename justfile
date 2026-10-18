@@ -1,19 +1,14 @@
-# Tools are pinned in mise.toml; override CARGO if mise is already activated.
-cargo := env("CARGO", "mise exec -- cargo")
+# Tools are pinned in mise.toml; override UV if mise is already activated.
+uv := env("UV", "mise exec -- uv")
 
 default: check
 
-fmt:
-    {{cargo}} fmt --all
-
-fmt-check:
-    {{cargo}} fmt --all -- --check
-
-lint:
-    {{cargo}} clippy --workspace --all-targets --locked -- -D warnings
+# Strict typing: mypy --strict over src and tests (config in pyproject.toml).
+typecheck:
+    {{uv}} run --group dev mypy
 
 test:
-    {{cargo}} test --workspace --locked
+    {{uv}} run --group dev pytest
 
 # The gate every change must pass.
-check: fmt-check lint test
+check: typecheck test
