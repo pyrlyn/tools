@@ -14,9 +14,25 @@ permissions:
   contents: read
 
 jobs:
+  # Which runner the macOS jobs use: pyrlyn/ci's macos-runner action reads the MACOS_RUNNER
+  # variable (unset or `hosted` = the hosted label, `xcode-27-local` = the dedicated Mac;
+  # fork PRs keep the hosted label).
+  macos-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      value: ${{ steps.r.outputs.value }}
+    steps:
+      - id: r
+        uses: pyrlyn/ci/.github/actions/macos-runner@4b5b5470544893cd515b88c751e92728341c6daa # main
+        with:
+          runner: ${{ vars.MACOS_RUNNER }}
+          value: '["macos-latest"]'
+
   # Strict typing (mypy --strict) and the pytest suite; Python and uv come from mise.toml.
   python:
-    runs-on: ${{ matrix.os }}
+    needs: macos-runner
+    runs-on: ${{ startsWith(matrix.os, 'macos') && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) && fromJSON(needs.macos-runner.outputs.value)[0] || matrix.os }}
     strategy:
       fail-fast: false
       matrix:
